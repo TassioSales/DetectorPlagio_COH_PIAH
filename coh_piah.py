@@ -68,74 +68,78 @@ def n_palavras_diferentes(lista_palavras):
             freq[p] = 1
 
     return len(freq)
-
-def compara_assinatura(as_a, as_b):
-    '''IMPLEMENTAR. Essa funcao recebe duas assinaturas de texto e deve devolver o grau de similaridade nas assinaturas.'''
-
-    resultado_diferenca = []
     
-    for i in range (0, len(assinatura_calculada), 1):
-        resultado_diferenca.append(abs(assinatura_infectada[i] - assinatura_calculada[i]))
-
-    soma_diferenca = 0
-    for resultado in resultado_diferenca:
-        soma_diferenca += resultado
-
-    grau_similaridade = soma_diferenca / 6
-
-    return grau_similaridade
-
 def calcula_assinatura(texto):
     '''IMPLEMENTAR. Essa funcao recebe um texto e deve devolver a assinatura do texto.'''
+    sentencas = separa_sentencas(texto)
 
-    texto = texto.lower()
-    total_letras = 0
-    lista_palavras = []
     lista_frases = []
-    
-    lista_sentencas = separa_sentencas(texto)
-    for sentenca in lista_sentencas:
-      novas_frases = separa_frases(sentenca)
-      lista_frases.extend(novas_frases)
-      
-    for frase in lista_frases:
-      novas_palavras = separa_palavras(frase)
-      lista_palavras.extend(novas_palavras)
-      
-    for palavra in lista_palavras:
-      total_letras += len(palavra)
-    
-    wal_texto = total_letras / len(lista_palavras)
-    
-    # ttr_texto = Relação Type-Token
-    ttr_texto = n_palavras_diferentes(lista_palavras) / len(lista_palavras)
+    for s in sentencas:
+        frases_separadas = separa_frases(s)
+        # separa_frases retorna um item de lista para cada sentença
+        # e esses itens são unidos em uma única lista, frases
+        for frases in frases_separadas:
+            lista_frases.append(frases)
 
-    # hlr_texto = Razão Hapax Legomana
-    hlr_texto = n_palavras_unicas(lista_palavras) / len(lista_palavras)
-    
-    # sal_texto = Tamanho médio de sentença
-    caracteres_sentencas = 0
-    for sentenca in lista_sentencas:
-      caracteres_sentencas += len(sentenca)
-    sal_texto = caracteres_sentencas / len(lista_sentencas)
-    
-    # sac_texto = Complexidade média da sentença
-    sac_texto =  len(lista_frases) / len(lista_sentencas)
-    
-    # pal_texto = Tamanho médio de frase
-    caracteres_frases = 0
-    for frase in lista_frases:
-      caracteres_frases += len(frase)
-    pal_texto = caracteres_frases / len(lista_frases)
-   
-    return [wal_texto, ttr_texto, hlr_texto, sal_texto, sac_texto, pal_texto]
+    lista_palavras = []
+    for f in lista_frases:
+        palavras_separadas = separa_palavras(f)
+        for palavras in palavras_separadas:
+            lista_palavras.append(palavras)
+    assinatura = []
+
+    assinatura.append(tamanho_medio_palavras(lista_palavras))
+    assinatura.append(relacao_type_token(lista_palavras))
+    assinatura.append(razao_hapax_legomana(lista_palavras))
+    assinatura.append(tamanho_medio_de_sentenca(sentencas))
+    assinatura.append(complexidade_de_sentenca(lista_frases, sentencas))
+    assinatura.append(tamanho_medio_de_frase(lista_frases))
+
+    return assinatura
 
 def avalia_textos(textos, ass_cp):
-    '''IMPLEMENTAR. Essa funcao recebe uma lista de textos e uma assinatura ass_cp e deve devolver o numero (1 a n) do texto com maior probabilidade de ter sido infectado por COH-PIAH.'''
-    assinatura_texto = []
-    lista_assinaturas = []
-    for texto in textos:
-        assinatura_texto = calcula_assinatura(texto)
-        lista_assinaturas.append(compara_assinatura(assinatura_texto, assinatura_infectada))
-    
-    return lista_assinaturas.index(max(lista_assinaturas))
+    '''IMPLEMENTAR. Essa funcao recebe uma lista de textos e deve devolver o numero (1 a n)
+    do texto com maior probabilidade de ter sido infectado por COH-PIAH.'''
+    valor = ass_cp[0]
+    for x in range(len(ass_cp)):
+        if ass_cp[x] < valor:
+            valor = ass_cp[x]
+            indice = x
+    return indice
+
+# Tamanho médio de palavra é a soma dos tamanhos das palavras dividida pelo número total de palavras:
+def tamanho_medio_palavras(palavras):
+    tamanho_das_palavras = 0
+    total_de_palavras = len(palavras)
+    for palavra in palavras:
+        tamanho_das_palavras = tamanho_das_palavras + len(palavra)
+
+    return tamanho_das_palavras/total_de_palavras
+
+# Relação Type-Token é o número de palavras diferentes dividido pelo número total de palavras.
+def relacao_type_token(palavras):
+    return n_palavras_diferentes(palavras) / len(palavras)
+
+# Razão Hapax Legomana é o número de palavras que aparecem uma única vez dividido pelo total de palavras.
+def razao_hapax_legomana(palavras):
+    return n_palavras_unicas(palavras) / len(palavras)
+
+# Tamanho médio de sentença é a soma dos números de caracteres em todas as sentenças dividida pelo número
+# de sentenças (os caracteres que separam uma sentença da outra não devem ser contabilizados como parte da sentença).
+def tamanho_medio_de_sentenca(sentencas):
+    caracteres_sentenca = 0
+    for sentenca in sentencas:
+        caracteres_sentenca = caracteres_sentenca + len(sentenca)
+    return caracteres_sentenca / len(sentencas)
+
+# Complexidade de sentença é o número total de frases divido pelo número de sentenças.
+def complexidade_de_sentenca(lista_frases, sentencas):
+    return len(lista_frases) / len(sentencas)
+
+# Tamanho médio de frase é a soma do número de caracteres em cada frase dividida pelo
+# número de frases no texto (os caracteres que separam uma frase da outra não devem ser contabilizados como parte da frase).
+def tamanho_medio_de_frase(lista_frases):
+    caracteres_frase = 0
+    for frases in lista_frases:
+        caracteres_frase = caracteres_frase + len(frases)
+    return caracteres_frase / len(lista_frases)
